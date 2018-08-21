@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io.wavfile import read,write
+from scipy.interpolate import interp1d
 
 '''
 Funcion que lee el archivo de entrada y retorna la señal junto con su tasa de muestreo
@@ -48,6 +49,15 @@ def graficar(title,xlabel,ylabel,X,Y):
     plt.plot(X, Y, "-")
     plt.show()
 
+def interpolacion(data,rate):
+    tiempo = np.linspace(0,len(data)/rate, num=len(data))
+    interp = interp1d(tiempo,data)
+    tiempo2 = np.linspace(0,len(data)/rate,len(data)*1000)
+    y = interp(tiempo2)
+    #print (tiempo[-1])
+    #print(len(data)/rate)
+    return y
+
 def binarioTransform(info):
     l = []
     for i in info:
@@ -62,13 +72,17 @@ def binarioTransform(info):
         lf.append(dato.zfill(len(maxLen)))
     return lf
 
-x = [0,1,0]
+x = [0,1,0,0,1,0,1,1,1,0,1,0,1,0,1,0,1]
 
 data,rate = abrirArchivo()
 m,t = modulacion_ASK(x,1)
-data= data[:10]
 print(data)
-print(binarioTransform(data))
 
-#graficar("Señal modulada","Amplitud","Tiempo",range(len(m)),m)
-print(m)
+binData = binarioTransform(data)
+index = int(np.ceil((10**5)/len(binData[0])))
+binData = binData[:index]
+print("index: " +str(index))
+
+print(binData)
+print(len(binData))
+#graficar("Señal modulada","Amplitud","Tiempo",x,y)
