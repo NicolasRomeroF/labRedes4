@@ -27,8 +27,9 @@ def modulacion_ASK (x,bp):
     A2 = 0
     br = 1/bp    #frecuencia de bit
     f = br*10
-    t2 = np.arange(bp/100,bp+bp/100,bp/1000)
+    t2 = np.arange(bp/100,bp+bp/1000,bp/100)
     m=[]
+    tb = len(t2)
 
     for i in range(len(x)):
         if x[i] == 1:
@@ -36,7 +37,7 @@ def modulacion_ASK (x,bp):
         else:
             y = A2*np.cos(2*np.pi*f*t2)
         m=np.concatenate((m,y))
-    return m,t2
+    return m,tb
 
 '''
 Funcion que grafica los datos entregados.
@@ -58,13 +59,16 @@ def interpolacion(data,rate):
     #print(len(data)/rate)
     return y
 
-def binarioTransform(info):
+def binarioTransform(data):
     l = []
-    for i in info:
+    for i in data:
+        #print(bin(i))
         binario = bin(i)[2:]
         if binario[0]=='b':
             i=i*-1
-            binario = bin(i)[2:]
+            binario = "1"+bin(i)[2:]
+        else:
+            binario = "0" + binario
         l.append(binario)
     maxLen = max(l, key=len)
     lf = []
@@ -72,17 +76,46 @@ def binarioTransform(info):
         lf.append(dato.zfill(len(maxLen)))
     return lf
 
+def binary_flat(data):
+    largo = len(data[0])
+    flat = []
+    for i in range(len(data)):
+        for j in range(largo):
+            flat.append(int(data[i][j]))
+    return flat
+
+def demodulacion_ASK(modulada,tb,bp):
+    mn=[];
+    f=10/bp
+    for n in range(tb,len(modulada)+tb,tb):
+        t=np.arange(bp/100,bp,bp/100)
+        y=np.cos(2*np.pi*f*t)                                       
+        mm=np.multiply(y,modulada[n-(tb-1):n])
+        t4=np.arange(bp/100,bp,bp/100)
+        z=np.trapz(t4,mm)                                              
+        zz=np.round((2*z/bp))                                     
+        if(zz>=1.0):                     
+            a=1
+        else:
+            a=0
+        mn.append(a)
+    return mn
+    
+
 x = [0,1,0,0,1,0,1,1,1,0,1,0,1,0,1,0,1]
 
 data,rate = abrirArchivo()
-m,t = modulacion_ASK(x,1)
 print(data)
 
 binData = binarioTransform(data)
-index = int(np.ceil((10**5)/len(binData[0])))
+index = int(np.ceil((10**2)/len(binData[0])))
 binData = binData[:index]
-print("index: " +str(index))
 
-print(binData)
-print(len(binData))
-#graficar("Señal modulada","Amplitud","Tiempo",x,y)
+flat = binary_flat(binData)
+bp = 2
+modulada,tb = modulacion_ASK(flat,bp)
+t = np.arange(bp/100,(bp)*len(flat)+bp/100,bp/100)
+print(len(flat))
+print(demodulacion_ASK(modulada,tb,bp))
+print(flat)
+#graficar("Señal modulada","Tiempo","Amplitud",t,modulada)
