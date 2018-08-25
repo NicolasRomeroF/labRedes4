@@ -22,6 +22,11 @@ def abrirArchivo():
 
     return data,rate
 
+def agregarRuido(N, SNR):
+    ruido = np.random.normal(0.0, 1.0/SNR, N)
+    return ruido
+
+
 def modulacion_ASK (x,bp):
     A1 = 1
     A2 = 0
@@ -85,7 +90,7 @@ def binary_flat(data):
     return flat
 
 def demodulacion_ASK(modulada,tb,bp):
-    mn=[];
+    mn=[]
     f=10/bp
     for n in range(tb,len(modulada)+tb,tb):
         t=np.arange(bp/100,bp,bp/100)
@@ -115,7 +120,12 @@ flat = binary_flat(binData)
 bp = 2
 modulada,tb = modulacion_ASK(flat,bp)
 t = np.arange(bp/100,(bp)*len(flat)+bp/100,bp/100)
-print(len(flat))
+N = len(modulada)
+SNR = 5.0
+ruido = agregarRuido(N,SNR)
+senalRuido = modulada + ruido
+#print(len(flat))
 print(demodulacion_ASK(modulada,tb,bp))
-print(flat)
+print(demodulacion_ASK(senalRuido,tb,bp))
+#print(flat)
 #graficar("Señal modulada","Tiempo","Amplitud",t,modulada)
