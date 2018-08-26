@@ -22,11 +22,18 @@ def abrirArchivo():
 
     return data,rate
 
+'''Funcion que devuelve un vector de ruidos de tamaño N
+   Entrada: tamaño del vector de ruidos, signal noise ratio
+   Salida: vector de ruidos
+'''
 def agregarRuido(N, SNR):
     ruido = np.random.normal(0.0, 1.0/SNR, N)
     return ruido
 
-
+'''Funcion que modula un vector de bits x con tiempo de bit bp
+   Entrada: vector de bits, tiempo de bit
+   Salida: señal modulada
+'''
 def modulacion_ASK (x,bp):
     A1 = 1
     A2 = 0
@@ -55,13 +62,10 @@ def graficar(title,xlabel,ylabel,X,Y):
     plt.plot(X, Y, "-")
     plt.show()
 
-def interpolacion(data,rate):
-    tiempo = np.linspace(0,len(data)/rate, num=len(data))
-    interp = interp1d(tiempo,data)
-    tiempo2 = np.linspace(0,len(data)/rate,len(data)*1000)
-    y = interp(tiempo2)
-    return y
-
+'''Funcion que transforma los datos a binario
+   Entrada: vector de datos
+   Salida: vector de datos en binario (lista de strings)
+'''
 def binarioTransform(data):
     l = []
     for i in data:
@@ -78,6 +82,10 @@ def binarioTransform(data):
         lf.append(dato.zfill(len(maxLen)))
     return lf
 
+'''Funcion que tansforma la lista de binarios en string a lista de bits int
+   Entrada: datos en binario
+   Salida: lista de bits
+'''
 def binary_flat(data):
     largo = len(data[0])
     flat = []
@@ -86,6 +94,10 @@ def binary_flat(data):
             flat.append(int(data[i][j]))
     return flat
 
+'''Funcion que demodula una señal
+   Entrada: Señal modulada, vector de tiempo, tiempo de bit
+   Salida: señal demodulada
+'''
 def demodulacion_ASK(modulada,tb,bp):
     mn=[]
     f=10/bp
@@ -103,6 +115,10 @@ def demodulacion_ASK(modulada,tb,bp):
         mn.append(a)
     return mn
 
+'''Funcion que extiende los bits para simular una señal cuadrada
+    Entrada: vecto de datos
+    Salida: señal cuadrada
+'''
 def squareSignal(data):
     t2 = np.ones((100))
     m=[]
@@ -115,6 +131,10 @@ def squareSignal(data):
         m=np.concatenate((m,y))
     return m
 
+'''Funcion que contabiliza la cantidad de errores de una señal ruidosa
+   Entrada: señal demodulada sin ruido, señal demodulada con ruido
+   Salida: tasa de error
+'''
 def cant_error(demodulada,demoduladaRuido):
     error = 0
     for i in range(len(demodulada)):
