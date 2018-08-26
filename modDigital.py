@@ -32,7 +32,7 @@ def modulacion_ASK (x,bp):
     A2 = 0
     br = 1/bp    #frecuencia de bit
     f = br*10
-    t2 = np.arange(bp/100,bp+bp/1000,bp/100)
+    t2 = np.arange(bp/100,bp+bp/100,bp/100)
     m=[]
     tb = len(t2)
 
@@ -60,14 +60,11 @@ def interpolacion(data,rate):
     interp = interp1d(tiempo,data)
     tiempo2 = np.linspace(0,len(data)/rate,len(data)*1000)
     y = interp(tiempo2)
-    #print (tiempo[-1])
-    #print(len(data)/rate)
     return y
 
 def binarioTransform(data):
     l = []
     for i in data:
-        #print(bin(i))
         binario = bin(i)[2:]
         if binario[0]=='b':
             i=i*-1
@@ -105,27 +102,90 @@ def demodulacion_ASK(modulada,tb,bp):
             a=0
         mn.append(a)
     return mn
+
+def squareSignal(data):
+    t2 = np.ones((100))
+    m=[]
+
+    for i in range(len(data)):
+        if data[i] == 1:
+            y = t2
+        else:
+            y = 0*t2
+        m=np.concatenate((m,y))
+    return m
+
+def cant_error(demodulada,demoduladaRuido):
+    error = 0
+    for i in range(len(demodulada)):
+        if demodulada[i] != demoduladaRuido[i]:
+            error += 1
+    return error
     
 
-x = [0,1,0,0,1,0,1,1,1,0,1,0,1,0,1,0,1]
+#BLOQUE PRINCIPAL
+try:
+    data,rate = abrirArchivo()
+except:
+    print("Error al abrir el archivo")
+    exit(1)
 
-data,rate = abrirArchivo()
-print(data)
 
 binData = binarioTransform(data)
-index = int(np.ceil((10**2)/len(binData[0])))
+
+cantBits = int(input("Ingrese la cantidad de bits con la que quiere trabajar\n(Valores mayores de 10000 hacen que el programa demore mas): "))
+tiempoBit = float(input("Ingrese tiempo de bit: "))
+index = int(np.ceil((cantBits)/len(binData[0])))
+
 binData = binData[:index]
 
 flat = binary_flat(binData)
-bp = 2
+bp = tiempoBit
+square = squareSignal(flat)
 modulada,tb = modulacion_ASK(flat,bp)
-t = np.arange(bp/100,(bp)*len(flat)+bp/100,bp/100)
+t = np.arange(bp/100,(bp)*len(flat)+bp/200,bp/100)
 N = len(modulada)
-SNR = 5.0
-ruido = agregarRuido(N,SNR)
-senalRuido = modulada + ruido
-#print(len(flat))
-print(demodulacion_ASK(modulada,tb,bp))
-print(demodulacion_ASK(senalRuido,tb,bp))
+
+demodulada=demodulacion_ASK(modulada,tb,bp)
+
+SNRs = [2.0, 4.0, 6.0, 8.0, 10.0]
+errores = []
+size = len(flat)
+for snr in SNRs:
+    moduladaRuido = modulada+agregarRuido(N,snr)
+    demoduladaRuido = demodulacion_ASK(moduladaRuido,tb,bp)
+    error = (cant_error(demodulada,demoduladaRuido)/cantBits)*100
+    errores.append(error)
+
+
+squareDemodulada = squareSignal(demodulada)
+
+
+
+opcion=1
+while opcion != 0:
+    print("""Menú:
+    1.- Mostrar audio digital
+    2.- Mostrar señal modulada
+    3.- Mostrar señal demodulada
+    4.- Tasa de errores segun SNR (2, 4, 6, 8, 10)
+
+    5.- Salir""")
+    try:
+        opcion = int(input("Ingrese una opción: "))
+    except:
+        opcion = 6
+    if opcion==1:
+        graficar("Audio","Tiempo [s]","Valor",t,square)
+    elif opcion==2:
+        graficar("Audio","Tiempo [s]","Amplitud",t,modulada)
+    elif opcion==3:
+        graficar("Audio","Tiempo [s]","Valor",t,squareDemodulada)
+    elif opcion==4:
+        graficar("Tasa de errores segun SNR","SNR","Tasa de error (%)",SNRs,errores)
+
+    elif opcion == 5:
+        opcion = 0
+        print("Salir")
 #print(flat)
 #graficar("Señal modulada","Tiempo","Amplitud",t,modulada)
